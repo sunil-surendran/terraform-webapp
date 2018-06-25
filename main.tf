@@ -25,3 +25,45 @@ resource "aws_vpc" "sunil-tf-vpc" {
 resource "aws_internet_gateway" "sunil-tf-igw" {
   vpc_id = "${aws_vpc.sunil-tf-vpc.id}"
 }
+
+# SUBNET CONFIGURATION
+
+resource "aws_subnet" "public_a" {
+  availability_zone = "us-west-2a"
+  cidr_block = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+  vpc_id = "${aws_vpc.sunil-tf-vpc.id}"
+  tags {
+    Name = "sunil-tf-pub-A"
+  }
+}
+
+resource "aws_subnet" "public_b" {
+  availability_zone = "us-west-2b"
+  cidr_block = "10.0.2.0/24"
+  map_public_ip_on_launch = true
+  vpc_id = "${aws_vpc.sunil-tf-vpc.id}"
+  tags {
+    Name = "sunil-tf-pub-B"
+  }
+}
+
+resource "aws_subnet" "private_a" {
+  availability_zone = "us-west-2a"
+  cidr_block = "10.0.3.0/24"
+  map_public_ip_on_launch = false
+  vpc_id = "${aws_vpc.sunil-tf-vpc.id}"
+  tags {
+    Name = "sunil-tf-pri-A"
+  }
+}
+
+resource "aws_subnet" "private_b" {
+  availability_zone = "us-west-2b"
+  cidr_block = "10.0.4.0/24"
+  map_public_ip_on_launch = false
+  vpc_id = "${aws_vpc.sunil-tf-vpc.id}"
+  tags {
+    Name = "sunil-tf-pri-B"
+  }
+}
