@@ -1,2 +1,6 @@
+# Terraform state files
 terraform.tfstate
 terraform.tfstate.bakcup
+
+# Terraform directory
+.terraform
