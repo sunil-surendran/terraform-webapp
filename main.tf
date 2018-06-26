@@ -104,4 +104,62 @@ resource "aws_security_group" "bastion_security" {
       from_port = 0
       to_port = 0
     }
+    tags {
+      Name = "sunil_bastion_sg"
+    }
 }
+
+resource "aws_security_group" "webserver_security" {
+  name = "webserver_security"
+  description = "Allow SSH & HTTP access to VPC CIDR"
+  vpc_id = "${aws_vpc.sunil-tf-vpc.id}"
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["${var.cidr}"]
+  }
+  ingress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["${var.cidr}"]
+  }
+  egress {
+    protocol = -1
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port = 0
+    to_port = 0
+  }
+  tags {
+    Name = "sunil_instance_sg"
+  }
+}
+  
+resource "aws_security_group" "nat_security" {
+  name = "nat_security"
+  description = "Access to internet for private instance"
+  vpc_id = "${aws_vpc.sunil-tf-vpc.id}"
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["${var.cidr}"]
+  }
+  ingress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["${var.cidr}"]
+  }
+  egress {
+    protocol = -1
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port = 0
+    to_port = 0
+  }
+  tags {
+    Name = "sunil_nat_sg"
+  }
+}
+
