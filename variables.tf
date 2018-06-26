@@ -12,3 +12,8 @@ variable "secure_ip" {
   description = "Secure IP to SSH into instances"
   default = "61.12.88.78/32"
 }
+
+variable "bastion_ami" {
+  description = "AMI used for Bastion Instance"
+  default = "ami-e251209a"
+}

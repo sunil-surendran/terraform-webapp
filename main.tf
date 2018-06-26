@@ -76,18 +76,32 @@ resource "aws_subnet" "private_b" {
 
 resource "aws_route_table" "public_route_table" {
   vpc_id = "${aws_vpc.sunil-tf-vpc.id}"
-}
-
-resource "aws_route" "public_route" {
-  route_table_id         = "${aws_route_table.public_route_table.id}"
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = "${aws_internet_gateway.sunil-tf-igw.id}"
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.sunil-tf-igw.id}"
+  }
+  tags {
+    Name = "public_route_table"
+  }
 }
 
 resource "aws_route_table" "private_route_table" {
   vpc_id = "${aws_vpc.sunil-tf-vpc.id}"
 }
 
+# SUBNET-ROUTE TABLE ASSOCIATION
+
+resource "aws_route_table_association" "public_a" {
+  subnet_id = "${aws_subnet.public_a.id}"
+  route_table_id = "${aws_route_table.public_route_table.id}"
+}
+
+resource "aws_route_table_association" "public_b" {
+  subnet_id = "${aws_subnet.public_b.id}"
+  route_table_id = "${aws_route_table.public_route_table.id}"
+}
+
+# SECURITY GROUP CONFIGURATIONS
 resource "aws_security_group" "bastion_security" {
     name = "bastion_security"
     description = "Allow SSH access to bastion"
@@ -163,3 +177,19 @@ resource "aws_security_group" "nat_security" {
   }
 }
 
+resource "aws_instance" "sunil_bastion" {
+  ami = "${var.bastion_ami}"
+  availability_zone = "us-west-2a"
+  instance_type = "t2.micro"
+  key_name = "suniloregonec2"
+  vpc_security_group_ids = [ "${aws_security_group.bastion_security.id}" ]
+  subnet_id = "${aws_subnet.public_a.id}"
+  associate_public_ip_address = "true"
+  tags {
+    Name           = "sunil_bastion"
+    Owner          = "sunil.surendran"
+    ExpirationDate = "2018-06-30"
+    Project        = "Learning"
+    Environment    = "Testing"
+  }
+}
