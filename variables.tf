@@ -17,3 +17,18 @@ variable "bastion_ami" {
   description = "AMI used for Bastion Instance"
   default = "ami-e251209a"
 }
+
+variable "webserver_ami" {
+  description = "AMI used for Bastion Instance"
+  default = "ami-28e07e50"
+}
+
+variable "nat_ami" {
+  description = "AMI used for Bastion Instance"
+  default = "ami-0032ea5ae08aa27a2"
+}
+
+variable "keyname" {
+  description = "KeyName for account"
+  default = "suniloregonec2"
+}

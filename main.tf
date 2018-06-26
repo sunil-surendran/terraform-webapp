@@ -87,6 +87,13 @@ resource "aws_route_table" "public_route_table" {
 
 resource "aws_route_table" "private_route_table" {
   vpc_id = "${aws_vpc.sunil-tf-vpc.id}"
+  route {
+    cidr_block = "0.0.0.0/0"
+    instance_id = "${aws_instance.sunil_nat.id}"
+  }
+  tags {
+    Name = "private_route_table"
+  }
 }
 
 # SUBNET-ROUTE TABLE ASSOCIATION
@@ -99,6 +106,16 @@ resource "aws_route_table_association" "public_a" {
 resource "aws_route_table_association" "public_b" {
   subnet_id = "${aws_subnet.public_b.id}"
   route_table_id = "${aws_route_table.public_route_table.id}"
+}
+
+resource "aws_route_table_association" "private_a" {
+  subnet_id = "${aws_subnet.private_a.id}"
+  route_table_id = "${aws_route_table.private_route_table.id}"
+}
+
+resource "aws_route_table_association" "private_b" {
+  subnet_id = "${aws_subnet.private_b.id}"
+  route_table_id = "${aws_route_table.private_route_table.id}"
 }
 
 # SECURITY GROUP CONFIGURATIONS
@@ -166,6 +183,12 @@ resource "aws_security_group" "nat_security" {
     protocol = "tcp"
     cidr_blocks = ["${var.cidr}"]
   }
+  ingress {
+    from_port = 0
+    to_port = 0
+    protocol = -1
+    security_groups = [ "${aws_security_group.webserver_security.id}" ]
+  }
   egress {
     protocol = -1
     cidr_blocks = ["0.0.0.0/0"]
@@ -176,6 +199,8 @@ resource "aws_security_group" "nat_security" {
     Name = "sunil_nat_sg"
   }
 }
+
+# INSTANCE CONFIGURATION
 
 resource "aws_instance" "sunil_bastion" {
   ami = "${var.bastion_ami}"
@@ -192,4 +217,60 @@ resource "aws_instance" "sunil_bastion" {
     Project        = "Learning"
     Environment    = "Testing"
   }
+}
+
+resource "aws_instance" "sunil_nat" {
+  ami = "${var.nat_ami}"
+  availability_zone = "us-west-2b"
+  instance_type = "t2.micro"
+  key_name = "${var.keyname}"
+  source_dest_check = "false"
+  vpc_security_group_ids = [ "${aws_security_group.nat_security.id}" ]
+  subnet_id = "${aws_subnet.public_b.id}"
+  associate_public_ip_address = "true"
+  tags {
+    Name           = "sunil_nat"
+    Owner          = "sunil.surendran"
+    ExpirationDate = "2018-06-30"
+    Project        = "Learning"
+    Environment    = "Testing"
+  }
+}
+
+resource "aws_instance" "sunil_webserver_a" {
+  depends_on = [ "aws_instance.sunil_nat" ]
+  ami = "${var.webserver_ami}"
+  availability_zone = "us-west-2a"
+  instance_type = "t2.micro"
+  key_name = "${var.keyname}"
+  vpc_security_group_ids = [ "${aws_security_group.webserver_security.id}" ]
+  subnet_id = "${aws_subnet.private_a.id}"
+  associate_public_ip_address = "false"
+  tags {
+    Name           = "sunil_webservera_a"
+    Owner          = "sunil.surendran"
+    ExpirationDate = "2018-06-30"
+    Project        = "Learning"
+    Environment    = "Testing"
+  }
+  user_data = "${file("userdata.sh")}"
+}
+
+resource "aws_instance" "sunil_webserver_b" {
+  depends_on = [ "aws_instance.sunil_nat" ]
+  ami = "${var.webserver_ami}"
+  availability_zone = "us-west-2b"
+  instance_type = "t2.micro"
+  key_name = "${var.keyname}"
+  vpc_security_group_ids = [ "${aws_security_group.webserver_security.id}" ]
+  subnet_id = "${aws_subnet.private_b.id}"
+  associate_public_ip_address = "false"
+  tags {
+    Name           = "sunil_webserver_b"
+    Owner          = "sunil.surendran"
+    ExpirationDate = "2018-06-30"
+    Project        = "Learning"
+    Environment    = "Testing"
+  }
+  user_data = "${file("userdata.sh")}"
 }
