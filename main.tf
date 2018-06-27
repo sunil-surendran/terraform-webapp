@@ -166,6 +166,25 @@ resource "aws_security_group" "webserver_security" {
     Name = "sunil_instance_sg"
   }
 }
+
+resource "aws_security_group" "sunil_elb_sg" {
+  name = "sunil_elb_sg"
+  description = "Security group for ELB"
+  vpc_id = "${aws_vpc.sunil-tf-vpc.id}"
+  ingress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["${var.secure_ip}"]
+  }
+  
+  egress {
+    protocol = -1
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port = 0
+    to_port = 0
+  }
+}
   
 resource "aws_security_group" "nat_security" {
   name = "nat_security"
@@ -247,7 +266,7 @@ resource "aws_instance" "sunil_webserver_a" {
   subnet_id = "${aws_subnet.private_a.id}"
   associate_public_ip_address = "false"
   tags {
-    Name           = "sunil_webservera_a"
+    Name           = "sunil_webserver_a"
     Owner          = "sunil.surendran"
     ExpirationDate = "2018-06-30"
     Project        = "Learning"
@@ -273,4 +292,24 @@ resource "aws_instance" "sunil_webserver_b" {
     Environment    = "Testing"
   }
   user_data = "${file("userdata.sh")}"
+}
+
+resource "aws_elb" "sunil_elb" {
+  name = "sunil-elb"
+  security_groups = [ "${aws_security_group.sunil_elb_sg.id}" ]
+  subnets = [ "${aws_subnet.public_a.id}", "${aws_subnet.public_b.id}" ]
+  instances = [ "${aws_instance.sunil_webserver_a.id}", "${aws_instance.sunil_webserver_b.id}" ]
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    target              = "HTTP:80/"
+    interval            = 30
+  }
 }
