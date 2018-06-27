@@ -256,49 +256,51 @@ resource "aws_instance" "sunil_nat" {
   }
 }
 
-resource "aws_instance" "sunil_webserver_a" {
-  depends_on = [ "aws_instance.sunil_nat" ]
-  ami = "${var.webserver_ami}"
-  availability_zone = "us-west-2a"
-  instance_type = "t2.micro"
-  key_name = "${var.keyname}"
-  vpc_security_group_ids = [ "${aws_security_group.webserver_security.id}" ]
-  subnet_id = "${aws_subnet.private_a.id}"
-  associate_public_ip_address = "false"
-  tags {
-    Name           = "sunil_webserver_a"
-    Owner          = "sunil.surendran"
-    ExpirationDate = "2018-06-30"
-    Project        = "Learning"
-    Environment    = "Testing"
-  }
-  user_data = "${file("userdata.sh")}"
-}
+#resource "aws_instance" "sunil_webserver_a" {
+#  depends_on = [ "aws_instance.sunil_nat" ]
+#  ami = "${var.webserver_ami}"
+#  availability_zone = "us-west-2a"
+#  instance_type = "t2.micro"
+#  key_name = "${var.keyname}"
+#  vpc_security_group_ids = [ "${aws_security_group.webserver_security.id}" ]
+#  subnet_id = "${aws_subnet.private_a.id}"
+#  associate_public_ip_address = "false"
+#  tags {
+#    Name           = "sunil_webserver_a"
+#    Owner          = "sunil.surendran"
+#    ExpirationDate = "2018-06-30"
+#    Project        = "Learning"
+#    Environment    = "Testing"
+#  }
+#  user_data = "${file("userdata.sh")}"
+#}
+#
+#resource "aws_instance" "sunil_webserver_b" {
+#  depends_on = [ "aws_instance.sunil_nat" ]
+#  ami = "${var.webserver_ami}"
+#  availability_zone = "us-west-2b"
+#  instance_type = "t2.micro"
+#  key_name = "${var.keyname}"
+#  vpc_security_group_ids = [ "${aws_security_group.webserver_security.id}" ]
+#  subnet_id = "${aws_subnet.private_b.id}"
+#  associate_public_ip_address = "false"
+#  tags {
+#    Name           = "sunil_webserver_b"
+#    Owner          = "sunil.surendran"
+#    ExpirationDate = "2018-06-30"
+#    Project        = "Learning"
+#    Environment    = "Testing"
+#  }
+#  user_data = "${file("userdata.sh")}"
+#}
 
-resource "aws_instance" "sunil_webserver_b" {
-  depends_on = [ "aws_instance.sunil_nat" ]
-  ami = "${var.webserver_ami}"
-  availability_zone = "us-west-2b"
-  instance_type = "t2.micro"
-  key_name = "${var.keyname}"
-  vpc_security_group_ids = [ "${aws_security_group.webserver_security.id}" ]
-  subnet_id = "${aws_subnet.private_b.id}"
-  associate_public_ip_address = "false"
-  tags {
-    Name           = "sunil_webserver_b"
-    Owner          = "sunil.surendran"
-    ExpirationDate = "2018-06-30"
-    Project        = "Learning"
-    Environment    = "Testing"
-  }
-  user_data = "${file("userdata.sh")}"
-}
+# ELASTIC LOAD BALANCER
 
 resource "aws_elb" "sunil_elb" {
   name = "sunil-elb"
   security_groups = [ "${aws_security_group.sunil_elb_sg.id}" ]
   subnets = [ "${aws_subnet.public_a.id}", "${aws_subnet.public_b.id}" ]
-  instances = [ "${aws_instance.sunil_webserver_a.id}", "${aws_instance.sunil_webserver_b.id}" ]
+#  instances = [ "${aws_instance.sunil_webserver_a.id}", "${aws_instance.sunil_webserver_b.id}" ]
   listener {
     instance_port     = 80
     instance_protocol = "http"
@@ -313,3 +315,51 @@ resource "aws_elb" "sunil_elb" {
     interval            = 30
   }
 }
+
+# AUTO SCALING GROUP CONFIGURATION
+
+resource "aws_autoscaling_group" "webserver_group" {
+	max_size = 4
+	min_size = 4
+	vpc_zone_identifier	= [ "${aws_subnet.private_a.id}", "${aws_subnet.private_b.id}" ]
+	load_balancers = [ "${aws_elb.sunil_elb.id}" ]
+	launch_configuration = "${aws_launch_configuration.sunil_launch_asg.name}"
+	tags = [
+		{
+			key = "Name"
+			value = "sunil_asg_intance"
+			propagate_at_launch = true
+		},
+		{
+			key = "Owner"
+			value = "sunil.surendran"
+			propagate_at_launch = true
+		},
+		{
+			key = "ExpirationDate"
+			value = "2018-06-30"
+			propagate_at_launch = true
+		},
+		{
+			key = "Project"
+			value = "Learning"
+			propagate_at_launch = true
+		},
+		{
+			key = "Environment"
+			value = "Testing"
+			propagate_at_launch = true
+		},
+	]
+}
+
+resource "aws_launch_configuration" "sunil_launch_asg" {
+	name = "sunil_launch_asg"
+	image_id = "${var.webserver_ami}"
+	instance_type = "t2.micro"
+	key_name = "${var.keyname}"
+	security_groups = [ "${aws_security_group.webserver_security.id}" ]
+  user_data = "${file("userdata.sh")}"
+}
+
+
