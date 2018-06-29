@@ -11,12 +11,9 @@ variable "list_az" {
 	type = "list"
 }
 
-
-
 ############# NEW ARCHITECTURE CIDR RANGES
 variable "cidr" {
-  description = "The CIDR block for the VPC. Default value is a valid CIDR, but not acceptable by AWS and should be overriden"
-  default     = "0.0.0.0/0"
+  description = "Enter the CIDR range for the vpc"
 }   
 
 variable "pub_cidr" {
@@ -28,23 +25,6 @@ variable "priv_cidr" {
   description = "CIDR for Private subnet"
 	type = "list"
 }   
-
-##################EXISTING ARCHITECTURE CIDR RANGES ####################
-#variable "exist_cidr" {
-#  description = "The CIDR block for the VPC. Default value is a valid CIDR, but not acceptable by AWS and should be overriden"
-#  default     = "0.0.0.0/0"
-#}   
-#
-#variable "exist_pub_cidr" {
-#  description = "CIDR for Public subnet"
-#	type = "list"
-#}   
-#
-#variable "exist_priv_cidr" {
-#  description = "CIDR for Private subnet"
-#	type = "list"
-#}   
-
 
 variable "secure_ip" {
   description = "Secure IP to SSH into instances"
@@ -85,4 +65,8 @@ variable "subnet_pri" {
 
 variable "private_rt" {
 	default = "rtb-192ddc62"
+}
+
+variable "domain_name" {
+	default = "sunilexample.com"
 }
